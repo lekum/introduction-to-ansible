@@ -1,0 +1,33 @@
+---
+- hosts: db 
+  sudo: yes
+  roles:
+      - mongodb_server
+
+  tasks:
+
+      - name: Install the pre-requisites
+        apt: name={{ item }} update_cache=yes
+        with_items:
+            - lvm2
+
+      - name: Create a vg named vgdata with /dev/sdb
+        lvg: vg=vgdata pvs=/dev/sdb
+
+      - name: Create a lv named lvdata01 in vgdata
+        lvol: vg=vgdata lv=lvdata01 size=80%VG
+
+      - name: Create an ext4 filesystem in /dev/mapper/vgdata-lvdata01
+        filesystem: fstype=ext4 dev=/dev/mapper/vgdata-lvdata01
+
+      - name: Make sure mongod is stopped
+        service: name=mongod state=stopped
+
+      - name: Mount the directory
+        mount: name=/var/lib/mongodb src=/dev/mapper/vgdata-lvdata01 fstype=ext4 state=mounted
+
+      - name: Re-establish permissions for the directory
+        file: path=/var/lib/mongodb owner=mongodb group=nogroup state=directory recurse=yes
+
+      - name: Make sure mongod is started
+        service: name=mongod state=started

@@ -1,0 +1,71 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: no
+  tasks:
+
+      - name: EC2 provisioning of mongo
+        ec2:
+            region: us-west-2
+            key_name: secret 
+            instance_type: m3.medium
+            image: ami-3d50120d
+            wait: yes
+            assign_public_ip: yes
+            private_ip: 172.33.0.4
+            vpc_subnet_id: subnet-8772f2e2
+            instance_tags:
+                Name: mongo-server
+            exact_count: 1
+            count_tag:
+                Name: mongo-server
+            volumes:
+                - device_name: /dev/xvdc
+                  # /dev/xvdc of 30 GB
+                  volume_size: 30
+        register: ec2
+
+      - name: Wait for SSH to come up
+        wait_for: host={{ item.public_ip }} port=22 delay=10 timeout=320 state=started
+        with_items: ec2.instances
+
+      - name: Add the host to the group to be provisioned
+        add_host: name={{ item.public_ip }} groupname=to_be_provisioned
+        with_items: ec2.instances
+
+- hosts: to_be_provisioned
+  user: ubuntu
+  sudo: yes
+  roles:
+      - mongodb_server
+
+  tasks:
+
+      - name: Authorize the public key access
+        authorized_key: user=ubuntu key="{{ lookup('file', authorized_key_file) }}"
+
+      - name: Install the pre-requisites
+        apt: name={{ item }} update_cache=yes
+        with_items:
+            - lvm2
+
+      - name: Create a vg named vgdata with /dev/xvdc
+        lvg: vg=vgdata pvs=/dev/xvdc
+
+      - name: Create a lv named lvdata01 in vgdata
+        lvol: vg=vgdata lv=lvdata01 size=80%VG
+
+      - name: Create an ext4 filesystem in /dev/mapper/vgdata-lvdata01
+        filesystem: fstype=ext4 dev=/dev/mapper/vgdata-lvdata01
+
+      - name: Make sure mongod is stopped
+        service: name=mongod state=stopped
+
+      - name: Mount the directory
+        mount: name=/var/lib/mongodb src=/dev/mapper/vgdata-lvdata01 fstype=ext4 state=mounted
+
+      - name: Re-establish permissions for the directory
+        file: path=/var/lib/mongodb owner=mongodb group=nogroup state=directory recurse=yes
+
+      - name: Make sure mongod is started
+        service: name=mongod state=started

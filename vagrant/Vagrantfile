@@ -4,22 +4,31 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     config.vm.provider :virtualbox do |vb|
         vb.customize ["modifyvm", :id, "--memory", "256"]
     end
+
     # Web server 1
     config.vm.define "web01" do |web|
         web.vm.hostname = "web01"
         web.vm.box = "ubuntu/trusty64"
         web.vm.network :private_network, ip: "10.0.15.21"
     end
+
     # Web server 2
     config.vm.define "web02" do |web|
         web.vm.hostname = "web02"
         web.vm.box = "ubuntu/trusty64"
         web.vm.network :private_network, ip: "10.0.15.22"
     end
+
     # Database server.
     config.vm.define "db01" do |db|
         db.vm.hostname = "db1"
         db.vm.box = "ubuntu/trusty64"
         db.vm.network :private_network, ip: "10.0.15.23"
+
+        config.vm.provider "virtualbox" do |vb|
+            vb.customize ['createhd', '--filename', 'disk.vdi', '--size', 5 * 1024]
+            vb.customize ['storageattach', :id, '--storagectl', 'SATAController', '--port', 1, '--device', 0, '--type', 'hdd', '--medium', 'disk.vdi']
+        end
+
     end
 end
