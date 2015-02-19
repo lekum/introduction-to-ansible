@@ -1,0 +1,28 @@
+---
+- name: Add the apt-key for mongodb-org
+  apt_key: keyserver=hkp://keyserver.ubuntu.com:80 id=0x7F0CEB10
+  sudo: yes
+
+- name: Add the apt repository for mongodb-org
+  apt_repository: repo="deb http://downloads-distro.mongodb.org/repo/ubuntu-upstart dist 10gen" update_cache=yes
+  sudo: yes
+
+- name: Make sure mongodb-org in installed
+  apt: name=mongodb-org state=present
+  sudo: yes
+
+- name: Enable small journal files if applicable
+  lineinfile: dest=/etc/mongod.conf regexp="^smallfiles =" line="smallfiles = true"
+  sudo: yes
+  when: small_files
+  notify:
+      - Restart mongodb-org
+
+- name: Bind mongodb to every IP
+  lineinfile: dest=/etc/mongod.conf regexp="^bind_ip =" state=absent
+  sudo: yes
+  notify:
+      - Restart mongodb-org
+
+- name: Make sure mongod is started
+  service: name=mongod state=started
