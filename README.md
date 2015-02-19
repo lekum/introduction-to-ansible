@@ -1,2 +1,3 @@
-# introduction-to-ansible
-Support material for the workshop
+# Introduction to Ansible 
+
+This repo contains the support material for the worksho "Introduction to Ansible".
