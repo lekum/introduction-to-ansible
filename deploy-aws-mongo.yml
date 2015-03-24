@@ -1,3 +1,12 @@
+# Example to create an AWS instance and install MongoDB
+#
+# The region, key_name, image and security group (group) must match your configuration
+#
+# Before running the playbook, ensure that:
+#  - The key 'demo-key' has been added to ssh-agent
+#  - export ANSIBLE_HOST_KEY_CHECKING=False
+#  - The environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY match your credentials
+#
 ---
 - hosts: localhost
   connection: local
@@ -6,21 +15,22 @@
 
       - name: EC2 provisioning of MongoDB instance
         ec2:
-            region: us-west-2
-            key_name: my-key 
-            instance_type: m3.medium
-            image: ami-3d50120d
+            region: eu-west-1
+            key_name: demo-key
+            instance_type: t2.micro
+            image: ami-234ecc54
             wait: yes
-            assign_public_ip: yes
             instance_tags:
                 Name: mongo-server
             exact_count: 1
             count_tag:
                 Name: mongo-server
+            group:
+                - SSH-ACCESS
             volumes:
                 - device_name: /dev/xvdc
-                  # /dev/xvdc of 30 GB
-                  volume_size: 30
+                  # /dev/xvdc of 5 GB
+                  volume_size: 5
         register: ec2
 
       - name: Wait for SSH to come up
@@ -36,12 +46,12 @@
   sudo: yes
   roles:
 
-      - mongodb_server
+      - {
+          role: mongodb_server,
+          small_files: true
+        }
 
   tasks:
-
-      - name: Authorize the public key access
-        authorized_key: user=ubuntu key="{{ lookup('file', authorized_key_file) }}"
 
       - name: Install the pre-requisites
         apt: name={{ item }} update_cache=yes
