@@ -1,9 +1,9 @@
 #! /bin/bash
-sudo aptitude install python-pip python-dev git -yq
-sudo pip install ansible
-sudo pip install boto
-sudo mkdir -p /etc/ansible
-sudo cp /vagrant/hosts /etc/ansible/hosts
-sudo cp /vagrant/copy_public_key.sh /home/vagrant
+aptitude install python-pip python-dev git -yq
+pip install ansible
+pip install boto
+mkdir -p /etc/ansible
 su vagrant -c 'ssh-keygen -q -t rsa -f ~/.ssh/id_rsa -N ""'
-git clone https://github.com/lekum/introduction-to-ansible.git /home/vagrant/introduction-to-ansible
+su vagrant -c "git clone https://github.com/lekum/introduction-to-ansible.git"
+su vagrant -c "cp /vagrant/copy_public_key.sh ."
+cp /home/vagrant/introduction-to-ansible/hosts /etc/ansible/hosts
