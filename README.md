@@ -31,19 +31,19 @@ Please take on account that you may need to install and use `dos2unix` to conver
 6. Inside the controller machine, run `./copy_public_key.sh` and say `yes` to the questions and use `vagrant` as password
 
 7. If you run `ansible all -m ping` you should get an output like this:
-```
-10.0.15.22 | success >> {
-    "changed": false,
-    "ping": "pong"
-}
-
-10.0.15.21 | success >> {
-    "changed": false,
-    "ping": "pong"
-}
-
-10.0.15.23 | success >> {
-    "changed": false,
-    "ping": "pong"
-}
-```
+   ```
+   10.0.15.22 | success >> {
+       "changed": false,
+       "ping": "pong"
+   }
+   
+   10.0.15.21 | success >> {
+       "changed": false,
+       "ping": "pong"
+   }
+   
+   10.0.15.23 | success >> {
+       "changed": false,
+       "ping": "pong"
+   }
+   ```
